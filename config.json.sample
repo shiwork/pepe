@@ -1,0 +1,6 @@
+{
+  "slack": {
+    "incoming": "https://hooks.slack.com/services/ABCDEFGH/IJKLMNOPQ/ABCD123456"
+  },
+  "dir": ["/watch/directory"]
+}
