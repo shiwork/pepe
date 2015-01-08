@@ -10,8 +10,10 @@ import (
 	"path"
 )
 
+var conf_path string = os.Getenv("PEPE_CONFIG")
+
 func main() {
-	conf, err := config.Parse("./config.json")
+	conf, err := config.Parse(conf_path)
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(0)
