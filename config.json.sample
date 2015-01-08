@@ -2,5 +2,10 @@
   "slack": {
     "incoming": "https://hooks.slack.com/services/ABCDEFGH/IJKLMNOPQ/ABCD123456"
   },
-  "dir": ["/watch/directory"]
+  "watch": [
+    {
+      "dir": "/watch/directory",
+      "url": "http://host.domain/path/to/contents"
+    }
+  ]
 }

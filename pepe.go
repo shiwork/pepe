@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"github.com/shiwork/pepe/config"
 	"github.com/shiwork/slack/incoming"
+	"path"
 )
 
 func main() {
@@ -28,34 +29,46 @@ func main() {
 	var slack_incoming_conf incoming.IncomingConf
 	slack_incoming_conf.WebHookUrl = conf.Slack.IncomingWebHook
 
+	var watched = conf.Watches[0]
+
 	go func() {
 		log.Println("start watch")
 		for {
 			select {
 			case event := <-watcher.Events:
 				log.Println("event:", event)
-				// post Slack
-				err := incoming.Post(
-					slack_incoming_conf,
-					incoming.Payload{
-						[]*incoming.Attachment{
-							&incoming.Attachment{
-								event.Name,
-								event.Name,
-								"",
-								[]*incoming.Field{
-									&incoming.Field{
-										"",
-										"テストだよ",
-										false,
+
+				switch {
+				case event.Op&fsnotify.Create == fsnotify.Create:
+					// create post message
+					var _, file_name = path.Split(event.Name)
+
+					var message string
+					message = "<"+watched.Url+"/"+file_name+"|"+file_name+">"
+
+					// post Slack
+					err := incoming.Post(
+						slack_incoming_conf,
+						incoming.Payload{
+							[]*incoming.Attachment{
+								&incoming.Attachment{
+									message,
+									message,
+									"",
+									[]*incoming.Field{
+										&incoming.Field{
+											"",
+											"",
+											false,
+										},
 									},
 								},
 							},
 						},
-					},
-				)
-				if err != nil {
-					log.Println("error:", err)
+					)
+					if err != nil {
+						log.Println("error:", err)
+					}
 				}
 			case err := <-watcher.Errors:
 				log.Println("error:", err)
@@ -64,8 +77,9 @@ func main() {
 	}()
 
 	// 監視ディレクトリの追加
-	for _, value := range conf.Dir {
-		err = watcher.Add(value)
+	for _, value := range conf.Watches {
+		log.Println(value.Dir)
+		err = watcher.Add(value.Dir)
 		if err != nil {
 			log.Fatal(err)
 		}

@@ -6,9 +6,14 @@ import (
 	"log"
 )
 
+type Watch struct {
+	Dir string `json:"dir`
+	Url string `json:"url`
+}
+
 type Config struct {
-	Dir   []string
-	Slack SlackConfig
+	Watches []Watch `json:"watch"`
+	Slack SlackConfig `json:"slack"`
 }
 
 type SlackConfig struct {
