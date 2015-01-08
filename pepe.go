@@ -32,27 +32,32 @@ func main() {
 		log.Println("start watch")
 		for {
 			select {
-			case event:= <-watcher.Events:
+			case event := <-watcher.Events:
 				log.Println("event:", event)
 				// post Slack
-				var field incoming.Field
-				field.Short = false
-				field.Value = "テストだよー"
-				field.Title = ""
-
-				var attachment incoming.Attachment
-				attachment.Fallback = "fallbackだよ"
-				attachment.Pretext = event.Name
-				attachment.Fields = []*incoming.Field{&field}
-
-				var payload incoming.Payload
-				payload.Attachments = []*incoming.Attachment{&attachment}
-
-				err := incoming.Post(slack_incoming_conf, payload);
+				err := incoming.Post(
+					slack_incoming_conf,
+					incoming.Payload{
+						[]*incoming.Attachment{
+							&incoming.Attachment{
+								event.Name,
+								event.Name,
+								"",
+								[]*incoming.Field{
+									&incoming.Field{
+										"",
+										"テストだよ",
+										false,
+									},
+								},
+							},
+						},
+					},
+				)
 				if err != nil {
 					log.Println("error:", err)
 				}
-			case err:= <-watcher.Errors:
+			case err := <-watcher.Errors:
 				log.Println("error:", err)
 			}
 		}
@@ -66,6 +71,6 @@ func main() {
 		}
 	}
 
-	s:=<-c
+	s := <-c
 	log.Println("signal:", s)
 }
