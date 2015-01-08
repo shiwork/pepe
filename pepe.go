@@ -41,14 +41,14 @@ func main() {
 				log.Println("event:", event)
 
 				switch {
-				case event.Op&fsnotify.Create == fsnotify.Create:
+				case event.Op&fsnotify.Create == fsnotify.Write:
 					// create post message
 					var _, file_name = path.Split(event.Name)
 
 					var message string
 					message = "<"+watched.Url+"/"+file_name+"|"+file_name+">"
 
-					// post Slack
+					// post message to Slack
 					err := incoming.Post(
 						slack_incoming_conf,
 						incoming.Payload{
