@@ -1,13 +1,14 @@
 package main
 
 import (
-	"os"
 	"github.com/go-fsnotify/fsnotify"
-	"log"
-	"os/signal"
 	"github.com/shiwork/pepe/config"
 	"github.com/shiwork/slack/incoming"
+	"log"
+	"os"
+	"os/signal"
 	"path"
+	"strings"
 )
 
 var conf_path string = os.Getenv("PEPE_CONFIG")
@@ -31,8 +32,6 @@ func main() {
 	var slack_incoming_conf incoming.IncomingConf
 	slack_incoming_conf.WebHookUrl = conf.Slack.IncomingWebHook
 
-	var watched = conf.Watches[0]
-
 	go func() {
 		log.Println("start watch")
 		for {
@@ -42,11 +41,22 @@ func main() {
 
 				switch {
 				case event.Op&fsnotify.Create == fsnotify.Write:
+					var file_path string
+					var dir_path string
+
+					for _, value := range conf.Watches {
+						if strings.HasPrefix(event.Name, value.Dir) {
+							file_path = strings.Replace(event.Name, value.Dir, "", -1)
+							dir_path = value.Url
+							break
+						}
+					}
+
 					// create post message
 					var _, file_name = path.Split(event.Name)
 
 					var message string
-					message = "<"+watched.Url+"/"+file_name+"|"+file_name+">"
+					message = "<" + dir_path + file_path + "|" + file_name + ">"
 
 					// post message to Slack
 					err := incoming.Post(
