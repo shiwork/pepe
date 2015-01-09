@@ -40,7 +40,7 @@ func main() {
 				log.Println("event:", event)
 
 				switch {
-				case event.Op&fsnotify.Create == fsnotify.Write:
+				case event.Op&fsnotify.Create == fsnotify.Create:
 					var file_path string
 					var dir_path string
 
