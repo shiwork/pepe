@@ -27,8 +27,8 @@ func main() {
 
 	c := make(chan os.Signal, 1)
 
-	var slackIncomingConf incoming.IncomingConf
-	slackIncomingConf.WebHookUrl = conf.Slack.IncomingWebHook
+	var slackConfig incoming.Config
+	slackConfig.WebHookURL = conf.Slack.IncomingWebHook
 
 	go func() {
 		log.Println("start watch")
@@ -45,7 +45,7 @@ func main() {
 					for _, value := range conf.Watches {
 						if strings.HasPrefix(event.Name, value.Dir) {
 							filePath = strings.Replace(event.Name, value.Dir, "", -1)
-							dirPath = value.Url
+							dirPath = value.URL
 							break
 						}
 					}
@@ -58,15 +58,15 @@ func main() {
 
 					// post message to Slack
 					err := incoming.Post(
-						slackIncomingConf,
+						slackConfig,
 						incoming.Payload{
-							[]*incoming.Attachment{
-								&incoming.Attachment{
+							[]incoming.Attachment{
+								incoming.Attachment{
 									message,
 									message,
 									"",
-									[]*incoming.Field{
-										&incoming.Field{
+									[]incoming.Field{
+										incoming.Field{
 											"",
 											"",
 											false,
