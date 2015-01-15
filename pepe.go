@@ -16,7 +16,6 @@ func main() {
 	conf, err := config.Parse(confPath)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(0)
 	}
 
 	watcher, err := fsnotify.NewWatcher()
@@ -25,66 +24,8 @@ func main() {
 	}
 	defer watcher.Close()
 
-	c := make(chan os.Signal, 1)
-
 	var slackConfig incoming.Config
 	slackConfig.WebHookURL = conf.Slack.IncomingWebHook
-
-	go func() {
-		log.Println("start watch")
-		for {
-			select {
-			case event := <-watcher.Events:
-				log.Println("event:", event)
-
-				switch {
-				case event.Op&fsnotify.Create == fsnotify.Create:
-					var filePath string
-					var dirPath string
-
-					for _, value := range conf.Watches {
-						if strings.HasPrefix(event.Name, value.Dir) {
-							filePath = strings.Replace(event.Name, value.Dir, "", -1)
-							dirPath = value.URL
-							break
-						}
-					}
-
-					// create post message
-					var _, filename = path.Split(event.Name)
-
-					var message string
-					message = "<" + dirPath + filePath + "|" + filename + ">"
-
-					// post message to Slack
-					err := incoming.Post(
-						slackConfig,
-						incoming.Payload{
-							[]incoming.Attachment{
-								incoming.Attachment{
-									message,
-									message,
-									"",
-									[]incoming.Field{
-										incoming.Field{
-											"",
-											"",
-											false,
-										},
-									},
-								},
-							},
-						},
-					)
-					if err != nil {
-						log.Println("error:", err)
-					}
-				}
-			case err := <-watcher.Errors:
-				log.Println("error:", err)
-			}
-		}
-	}()
 
 	// 監視ディレクトリの追加
 	for _, value := range conf.Watches {
@@ -95,6 +36,57 @@ func main() {
 		}
 	}
 
-	s := <-c
-	log.Println("signal:", s)
+	log.Println("start watch")
+	for {
+		select {
+		case event := <-watcher.Events:
+			log.Println("event:", event)
+
+			switch {
+			case event.Op&fsnotify.Create == fsnotify.Create:
+				var filePath string
+				var dirPath string
+
+				for _, value := range conf.Watches {
+					if strings.HasPrefix(event.Name, value.Dir) {
+						filePath = strings.Replace(event.Name, value.Dir, "", -1)
+						dirPath = value.URL
+						break
+					}
+				}
+
+				// create post message
+				var _, filename = path.Split(event.Name)
+
+				var message string
+				message = "<" + dirPath + filePath + "|" + filename + ">"
+
+				// post message to Slack
+				err := incoming.Post(
+					slackConfig,
+					incoming.Payload{
+						[]incoming.Attachment{
+							incoming.Attachment{
+								message,
+								message,
+								"",
+								[]incoming.Field{
+									incoming.Field{
+										"",
+										"",
+										false,
+									},
+								},
+							},
+						},
+					},
+				)
+				if err != nil {
+					log.Println("error:", err)
+				}
+			}
+		case err := <-watcher.Errors:
+			log.Println("error:", err)
+		}
+	}
 }
