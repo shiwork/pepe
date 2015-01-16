@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/go-fsnotify/fsnotify"
+	"github.com/shiwork/fsmonitor"
 	"github.com/shiwork/pepe/config"
 	"github.com/shiwork/slack/incoming"
 	"log"
@@ -18,11 +19,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	watcher, err := fsnotify.NewWatcher()
+	watcher, err := fsmonitor.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer watcher.Close()
 
 	var slackConfig incoming.Config
 	slackConfig.WebHookURL = conf.Slack.IncomingWebHook
@@ -30,7 +30,7 @@ func main() {
 	// 監視ディレクトリの追加
 	for _, value := range conf.Watches {
 		log.Println(value.Dir)
-		err = watcher.Add(value.Dir)
+		err = watcher.Watch(value.Dir)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -85,7 +85,7 @@ func main() {
 					log.Println("error:", err)
 				}
 			}
-		case err := <-watcher.Errors:
+		case err := <-watcher.Error:
 			log.Println("error:", err)
 		}
 	}
